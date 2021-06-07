@@ -12,7 +12,7 @@ import (
 )
 
 // Version of release
-const Version = "0.0.1"
+const Version = "0.0.2"
 
 // SNMP session object
 type Session struct {
