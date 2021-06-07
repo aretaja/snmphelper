@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/soniah/gosnmp"
+	"github.com/gosnmp/gosnmp"
 )
 
 // Version of release
@@ -18,7 +18,7 @@ const Version = "0.0.1"
 type Session struct {
 	Host, User, Prot, Pass, Slevel, PrivProt, PrivPass string
 	Ver                                                int
-	MaxRepetitions, Timeout                            uint8 // Defaults: MaxRepetitions: 5, Timeout: 2
+	MaxRepetitions, Timeout                            uint32 // Defaults: MaxRepetitions: 5, Timeout: 2
 	Snmp                                               *gosnmp.GoSNMP
 	Result                                             SnmpOut
 }
