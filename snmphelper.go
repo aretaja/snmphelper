@@ -12,7 +12,7 @@ import (
 )
 
 // Version of release
-const Version = "0.0.2"
+const Version = "0.0.3"
 
 // SNMP session object
 type Session struct {
@@ -20,7 +20,6 @@ type Session struct {
 	Ver                                                int
 	MaxRepetitions, Timeout                            uint32 // Defaults: MaxRepetitions: 5, Timeout: 2
 	Snmp                                               *gosnmp.GoSNMP
-	Result                                             SnmpOut
 }
 
 // Session.Result data type. SNMP query results will appear here.
@@ -118,43 +117,42 @@ func (s *Session) New() error {
 }
 
 // Do SNMP get
-func (s *Session) Get(oids []string) error {
+func (s *Session) Get(oids []string) (SnmpOut, error) {
 	var out = SnmpOut{}
 
 	snmp := s.Snmp
 	if err := snmp.Connect(); err != nil {
-		return err
+		return out, err
 	}
 	defer snmp.Conn.Close()
 
 	// Do get
 	res, err := snmp.Get(oids)
 	if err != nil {
-		return err
+		return out, err
 	}
 
 	// Make formatted output
 	for _, p := range res.Variables {
 		k, v, err2 := formatValue(p, "", false)
 		if err2 != nil {
-			return err2
+			return out, err2
 		}
 		out[k] = v
 	}
 
-	s.Result = out
-	return nil
+	return out, nil
 }
 
 // Do SNMP walk or bulkwalk
-func (s *Session) Walk(oid string, bulk bool, stripoid bool) error {
+func (s *Session) Walk(oid string, bulk bool, stripoid bool) (SnmpOut, error) {
 	var out = SnmpOut{}
 	var pdus []gosnmp.SnmpPDU
 
 	snmp := s.Snmp
 	err := snmp.Connect()
 	if err != nil {
-		return err
+		return out, err
 	}
 	defer snmp.Conn.Close()
 
@@ -172,20 +170,19 @@ func (s *Session) Walk(oid string, bulk bool, stripoid bool) error {
 	}
 
 	if err != nil {
-		return err
+		return out, err
 	}
 
 	// Make formatted output
 	for _, p := range pdus {
 		k, v, err2 := formatValue(p, oid, stripoid)
 		if err2 != nil {
-			return err2
+			return out, err2
 		}
 		out[k] = v
 	}
 
-	s.Result = out
-	return err
+	return out, err
 }
 
 // Local part
