@@ -12,7 +12,7 @@ import (
 )
 
 // Version of release
-const Version = "0.0.3"
+const Version = "1.0.0"
 
 // SNMP session object
 type Session struct {
@@ -26,7 +26,7 @@ type Session struct {
 type SnmpOut map[string]snmpValue
 
 // Initializes and returns *gosnmp.GoSNMP in Session.Snmp
-func (s *Session) New() error {
+func (s *Session) New() (*Session, error) {
 	// Setup SNMP security model
 	usm := &gosnmp.UsmSecurityParameters{
 		UserName:                 s.User,
@@ -65,7 +65,7 @@ func (s *Session) New() error {
 	case "authPriv":
 		snmp.MsgFlags = gosnmp.AuthPriv
 	default:
-		return fmt.Errorf("invalid SNMP sec level - %s", s.Slevel)
+		return nil, fmt.Errorf("invalid SNMP sec level - %s", s.Slevel)
 	}
 
 	// Set version
@@ -77,7 +77,7 @@ func (s *Session) New() error {
 	case 3:
 		snmp.Version = gosnmp.Version3
 	default:
-		return fmt.Errorf("invalid SNMP version - %d", s.Ver)
+		return nil, fmt.Errorf("invalid SNMP version - %d", s.Ver)
 	}
 
 	// Set AuthenticationProtocol
@@ -89,7 +89,7 @@ func (s *Session) New() error {
 	case "SHA":
 		usm.AuthenticationProtocol = gosnmp.SHA
 	default:
-		return fmt.Errorf("invalid SNMP authentication protocol - %s", s.Prot)
+		return nil, fmt.Errorf("invalid SNMP authentication protocol - %s", s.Prot)
 	}
 
 	// Set PrivacyProtocol
@@ -109,11 +109,11 @@ func (s *Session) New() error {
 	case "AES256C":
 		usm.PrivacyProtocol = gosnmp.AES256C
 	default:
-		return fmt.Errorf("invalid SNMP privacy protocol - %s", s.PrivProt)
+		return nil, fmt.Errorf("invalid SNMP privacy protocol - %s", s.PrivProt)
 	}
 
 	s.Snmp = snmp
-	return nil
+	return s, nil
 }
 
 // Do SNMP get
@@ -234,7 +234,7 @@ func (v *snmpValue) snmpValDecode() error {
 		val, _ := v.Raw.(uint64)
 		v.Counter64 = uint64(val)
 	case "Gauge32": // 0x42. unsigned
-		val, _ := v.Raw.(uint32)
+		val, _ := v.Raw.(uint)
 		v.Gauge32 = uint64(val)
 	case "TimeTicks": // 0x43. unsigned
 		val, _ := v.Raw.(uint32)
