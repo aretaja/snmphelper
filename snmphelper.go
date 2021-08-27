@@ -130,6 +130,8 @@ func (s *Session) Get(oids []string) (SnmpOut, error) {
 	res, err := snmp.Get(oids)
 	if err != nil {
 		return out, err
+	} else if res.Error != 0 {
+		return out, fmt.Errorf("%v - %s", oids, res.Error.String())
 	}
 
 	// Make formatted output
