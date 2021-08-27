@@ -173,6 +173,8 @@ func (s *Session) Walk(oid string, bulk bool, stripoid bool) (SnmpOut, error) {
 
 	if err != nil {
 		return out, err
+	} else if pdus == nil {
+		return out, fmt.Errorf("snmpwalk - no results")
 	}
 
 	// Make formatted output
