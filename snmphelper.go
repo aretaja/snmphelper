@@ -12,7 +12,7 @@ import (
 )
 
 // Version of release
-const Version = "1.0.0"
+const Version = "1.0.1"
 
 // SNMP session object
 type Session struct {
@@ -56,18 +56,6 @@ func (s *Session) New() (*Session, error) {
 		snmp.Timeout = time.Duration(s.Timeout) * time.Second
 	}
 
-	// Set seclevel
-	switch s.Slevel {
-	case "noAuthNoPriv":
-		snmp.MsgFlags = gosnmp.NoAuthNoPriv
-	case "authNoPriv":
-		snmp.MsgFlags = gosnmp.AuthNoPriv
-	case "authPriv":
-		snmp.MsgFlags = gosnmp.AuthPriv
-	default:
-		return nil, fmt.Errorf("invalid SNMP sec level - %s", s.Slevel)
-	}
-
 	// Set version
 	switch s.Ver {
 	case 1:
@@ -80,36 +68,50 @@ func (s *Session) New() (*Session, error) {
 		return nil, fmt.Errorf("invalid SNMP version - %d", s.Ver)
 	}
 
-	// Set AuthenticationProtocol
-	switch s.Prot {
-	case "NoAuth":
-		usm.AuthenticationProtocol = gosnmp.NoAuth
-	case "MD5":
-		usm.AuthenticationProtocol = gosnmp.MD5
-	case "SHA":
-		usm.AuthenticationProtocol = gosnmp.SHA
-	default:
-		return nil, fmt.Errorf("invalid SNMP authentication protocol - %s", s.Prot)
-	}
+	if s.Ver == 3 {
+		// Set seclevel
+		switch s.Slevel {
+		case "noAuthNoPriv":
+			snmp.MsgFlags = gosnmp.NoAuthNoPriv
+		case "authNoPriv":
+			snmp.MsgFlags = gosnmp.AuthNoPriv
+		case "authPriv":
+			snmp.MsgFlags = gosnmp.AuthPriv
+		default:
+			return nil, fmt.Errorf("invalid SNMP sec level - %s", s.Slevel)
+		}
 
-	// Set PrivacyProtocol
-	switch s.PrivProt {
-	case "NoPriv":
-		usm.PrivacyProtocol = gosnmp.NoPriv
-	case "DES":
-		usm.PrivacyProtocol = gosnmp.DES
-	case "AES":
-		usm.PrivacyProtocol = gosnmp.AES
-	case "AES192":
-		usm.PrivacyProtocol = gosnmp.AES192
-	case "AES192C":
-		usm.PrivacyProtocol = gosnmp.AES192C
-	case "AES256":
-		usm.PrivacyProtocol = gosnmp.AES256
-	case "AES256C":
-		usm.PrivacyProtocol = gosnmp.AES256C
-	default:
-		return nil, fmt.Errorf("invalid SNMP privacy protocol - %s", s.PrivProt)
+		// Set AuthenticationProtocol
+		switch s.Prot {
+		case "NoAuth":
+			usm.AuthenticationProtocol = gosnmp.NoAuth
+		case "MD5":
+			usm.AuthenticationProtocol = gosnmp.MD5
+		case "SHA":
+			usm.AuthenticationProtocol = gosnmp.SHA
+		default:
+			return nil, fmt.Errorf("invalid SNMP authentication protocol - %s", s.Prot)
+		}
+
+		// Set PrivacyProtocol
+		switch s.PrivProt {
+		case "NoPriv":
+			usm.PrivacyProtocol = gosnmp.NoPriv
+		case "DES":
+			usm.PrivacyProtocol = gosnmp.DES
+		case "AES":
+			usm.PrivacyProtocol = gosnmp.AES
+		case "AES192":
+			usm.PrivacyProtocol = gosnmp.AES192
+		case "AES192C":
+			usm.PrivacyProtocol = gosnmp.AES192C
+		case "AES256":
+			usm.PrivacyProtocol = gosnmp.AES256
+		case "AES256C":
+			usm.PrivacyProtocol = gosnmp.AES256C
+		default:
+			return nil, fmt.Errorf("invalid SNMP privacy protocol - %s", s.PrivProt)
+		}
 	}
 
 	s.Snmp = snmp
@@ -165,7 +167,7 @@ func (s *Session) Walk(oid string, bulk bool, stripoid bool) (SnmpOut, error) {
 	}
 
 	// Do walk
-	if bulk {
+	if bulk && s.Ver != 1 {
 		err = snmp.BulkWalk(oid, getResults)
 	} else {
 		err = snmp.Walk(oid, getResults)
