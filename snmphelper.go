@@ -12,7 +12,7 @@ import (
 )
 
 // Version of release
-const Version = "1.0.1"
+const Version = "1.1.0"
 
 // SNMP session object
 type Session struct {
@@ -189,6 +189,67 @@ func (s *Session) Walk(oid string, bulk bool, stripoid bool) (SnmpOut, error) {
 	}
 
 	return out, err
+}
+
+// Return pointer to new SnmpPDU
+type SetPDU struct {
+	Oid string
+	// Integer, OctetString, IPAddress, Gauge32
+	Vtype string
+	Value interface{}
+}
+
+// Do SNMP set
+func (s *Session) Set(setPdus []SetPDU) (SnmpOut, error) {
+	var out = SnmpOut{}
+	var pdus = []gosnmp.SnmpPDU{}
+
+	for _, v := range setPdus {
+		pdu := gosnmp.SnmpPDU{
+			Name:  v.Oid,
+			Value: v.Value,
+		}
+
+		switch {
+		case v.Vtype == "Integer":
+			pdu.Type = 2
+		case v.Vtype == "OctetString":
+			pdu.Type = 4
+		case v.Vtype == "IPAddress":
+			pdu.Type = 40
+		case v.Vtype == "Gauge32":
+			pdu.Type = 42
+		default:
+			return out, fmt.Errorf("not supported pdu type - %s", v.Vtype)
+		}
+
+		pdus = append(pdus, pdu)
+	}
+
+	snmp := s.Snmp
+	if err := snmp.Connect(); err != nil {
+		return out, err
+	}
+	defer snmp.Conn.Close()
+
+	// Do set
+	res, err := snmp.Set(pdus)
+	if err != nil {
+		return out, err
+	} else if res.Error != 0 {
+		return out, fmt.Errorf("%v - %s", pdus, res.Error.String())
+	}
+
+	// Make formatted output
+	for _, p := range res.Variables {
+		k, v, err2 := formatValue(p, "", false)
+		if err2 != nil {
+			return out, err2
+		}
+		out[k] = v
+	}
+
+	return out, nil
 }
 
 // Local part
