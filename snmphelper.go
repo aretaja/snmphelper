@@ -131,16 +131,16 @@ func (s *Session) Get(oids []string) (SnmpOut, error) {
 	// Do get
 	res, err := snmp.Get(oids)
 	if err != nil {
-		return out, err
+		return out, fmt.Errorf("%s get %v - %s", s.Host, oids, err)
 	} else if res.Error != 0 {
-		return out, fmt.Errorf("%v - %s", oids, res.Error.String())
+		return out, fmt.Errorf("%s get %v - %s", s.Host, oids, res.Error.String())
 	}
 
 	// Make formatted output
 	for _, p := range res.Variables {
 		k, v, err2 := formatValue(p, "", false)
 		if err2 != nil {
-			return out, err2
+			return out, fmt.Errorf("%s get %v - %s", s.Host, k, err2)
 		}
 		out[k] = v
 	}
@@ -174,16 +174,16 @@ func (s *Session) Walk(oid string, bulk bool, stripoid bool) (SnmpOut, error) {
 	}
 
 	if err != nil {
-		return out, err
+		return out, fmt.Errorf("%s walk %v - %s", s.Host, oid, err)
 	} else if pdus == nil {
-		return out, fmt.Errorf("snmpwalk - no results")
+		return out, fmt.Errorf("%s walk %v - no results", s.Host, oid)
 	}
 
 	// Make formatted output
 	for _, p := range pdus {
 		k, v, err2 := formatValue(p, oid, stripoid)
 		if err2 != nil {
-			return out, err2
+			return out, fmt.Errorf("%s get %v - %s", s.Host, k, err2)
 		}
 		out[k] = v
 	}
@@ -237,7 +237,7 @@ func (s *Session) Set(setPdus []SetPDU) (SnmpOut, error) {
 	if err != nil {
 		return out, err
 	} else if res.Error != 0 {
-		return out, fmt.Errorf("%v - %s", pdus, res.Error.String())
+		return out, fmt.Errorf("%s set %v - %s", s.Host, pdus, res.Error.String())
 	}
 
 	// Make formatted output
