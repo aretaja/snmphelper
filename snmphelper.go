@@ -39,7 +39,7 @@ func (s *Session) New() (*Session, error) {
 		Target:             s.Host,
 		Port:               161,
 		Community:          s.User,
-		Timeout:            time.Duration(2) * time.Second,
+		Timeout:            time.Duration(4) * time.Second,
 		SecurityModel:      gosnmp.UserSecurityModel,
 		MaxRepetitions:     5,
 		Retries:            1,
