@@ -124,7 +124,7 @@ func (s *Session) Get(oids []string) (SnmpOut, error) {
 
 	snmp := s.Snmp
 	if err := snmp.Connect(); err != nil {
-		return out, err
+		return out, fmt.Errorf("%s - %s", s.Host, err)
 	}
 	defer snmp.Conn.Close()
 
@@ -156,7 +156,7 @@ func (s *Session) Walk(oid string, bulk bool, stripoid bool) (SnmpOut, error) {
 	snmp := s.Snmp
 	err := snmp.Connect()
 	if err != nil {
-		return out, err
+		return out, fmt.Errorf("%s - %s", s.Host, err)
 	}
 	defer snmp.Conn.Close()
 
@@ -228,7 +228,7 @@ func (s *Session) Set(setPdus []SetPDU) (SnmpOut, error) {
 
 	snmp := s.Snmp
 	if err := snmp.Connect(); err != nil {
-		return out, err
+		return out, fmt.Errorf("%s - %s", s.Host, err)
 	}
 	defer snmp.Conn.Close()
 
