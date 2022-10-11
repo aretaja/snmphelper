@@ -295,7 +295,7 @@ func (v *snmpValue) snmpValDecode() error {
 		val, _ := v.Raw.(int)
 		v.Integer = int64(val)
 	case "Counter32": // 0x41. unsigned
-		val, _ := v.Raw.(uint32)
+		val, _ := v.Raw.(uint)
 		v.Counter32 = uint64(val)
 	case "Counter64": // 0x46. unsigned
 		val, _ := v.Raw.(uint64)
